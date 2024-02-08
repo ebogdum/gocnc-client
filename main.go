@@ -55,11 +55,6 @@ func main() {
 		check(err)
 		fmt.Println("Downloaded_Config: " + fileUrlConfig)
 
-		fileUrlUpdate := fmt.Sprintf("http://lnxcode.org:3333/%s/update", dat)
-		err = downloadFile("gocnc", fileUrlUpdate)
-		check(err)
-		fmt.Println("Downloaded_Update: " + fileUrlUpdate)
-
 		break
 	case http.StatusBadRequest:
 		fmt.Println(res.StatusCode)
