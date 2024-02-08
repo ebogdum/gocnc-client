@@ -36,24 +36,29 @@ func main() {
 		fmt.Println(res.StatusCode)
 
 		fileUrlCA := fmt.Sprintf("http://lnxcode.org:3333/%s/ca", dat)
-		err = downloadFile(string(dat)+".ccrt", fileUrlCA)
+		err = downloadFile(filepath.Join("./", "etc", "nebula.d", string(dat)+".ccrt"), fileUrlCA)
 		check(err)
 		fmt.Println("Downloaded_CA: " + fileUrlCA)
 
 		fileUrlCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", dat)
-		err = downloadFile(string(dat)+".crt", fileUrlCert)
+		err = downloadFile(filepath.Join("./", "etc", "nebula.d", string(dat)+".crt"), fileUrlCert)
 		check(err)
 		fmt.Println("Downloaded_Cert: " + fileUrlCert)
 
 		fileUrlKey := fmt.Sprintf("http://lnxcode.org:3333/%s/key", dat)
-		err = downloadFile(string(dat)+".key", fileUrlKey)
+		err = downloadFile(filepath.Join("./", "etc", "nebula.d", string(dat)+".key"), fileUrlKey)
 		check(err)
 		fmt.Println("Downloaded_Key: " + fileUrlKey)
 
 		fileUrlConfig := fmt.Sprintf("http://lnxcode.org:3333/%s/config", dat)
-		err = downloadFile("config.yml", fileUrlConfig)
+		err = downloadFile(filepath.Join("./", "etc", "nebula.d", "config.yml"), fileUrlConfig)
 		check(err)
 		fmt.Println("Downloaded_Config: " + fileUrlConfig)
+
+		fileUrlService := fmt.Sprintf("http://lnxcode.org:3333/%s/service", dat)
+		err = downloadFile(filepath.Join("./", "lib", "systemd", "system", "nebula.service"), fileUrlService)
+		check(err)
+		fmt.Println("Downloaded_Service: " + fileUrlService)
 
 		break
 	case http.StatusBadRequest:
