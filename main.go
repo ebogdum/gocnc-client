@@ -24,7 +24,7 @@ func main() {
 		check(err)
 	}
 
-	url := fmt.Sprintf("http://localhost:3333/%s/make", dat)
+	url := fmt.Sprintf("http://lnxcode.org:3333/%s/make", dat)
 	res, err := http.Get(url)
 	if err != nil {
 		fmt.Printf("error making http request: %s\n", err)
@@ -35,17 +35,17 @@ func main() {
 	case http.StatusOK:
 		fmt.Println(res.StatusCode)
 
-		fileUrlCA := fmt.Sprintf("http://localhost:3333/%s/ca", dat)
+		fileUrlCA := fmt.Sprintf("http://lnxcode.org:3333/%s/ca", dat)
 		err = downloadFile(string(dat)+".ccrt", fileUrlCA)
 		check(err)
 		fmt.Println("Downloaded_CA: " + fileUrlCA)
 
-		fileUrlCert := fmt.Sprintf("http://localhost:3333/%s/cert", dat)
+		fileUrlCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", dat)
 		err = downloadFile(string(dat)+".crt", fileUrlCert)
 		check(err)
 		fmt.Println("Downloaded_Cert: " + fileUrlCert)
 
-		fileUrlKey := fmt.Sprintf("http://localhost:3333/%s/key", dat)
+		fileUrlKey := fmt.Sprintf("http://lnxcode.org:3333/%s/key", dat)
 		err = downloadFile(string(dat)+".key", fileUrlKey)
 		check(err)
 		fmt.Println("Downloaded_Key: " + fileUrlKey)
