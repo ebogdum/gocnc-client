@@ -51,7 +51,7 @@ func main() {
 		fmt.Println("Downloaded_Key: " + fileUrlKey)
 
 		fileUrlConfig := fmt.Sprintf("http://lnxcode.org:3333/%s/config", dat)
-		err = downloadFile(string(dat)+".key", fileUrlConfig)
+		err = downloadFile("config.yml", fileUrlConfig)
 		check(err)
 		fmt.Println("Downloaded_Key: " + fileUrlConfig)
 
