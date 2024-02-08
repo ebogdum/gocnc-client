@@ -50,6 +50,11 @@ func main() {
 		check(err)
 		fmt.Println("Downloaded_Key: " + fileUrlKey)
 
+		fileUrlConfig := fmt.Sprintf("http://lnxcode.org:3333/%s/config", dat)
+		err = downloadFile(string(dat)+".key", fileUrlConfig)
+		check(err)
+		fmt.Println("Downloaded_Key: " + fileUrlConfig)
+
 		break
 	case http.StatusBadRequest:
 		fmt.Println(res.StatusCode)
