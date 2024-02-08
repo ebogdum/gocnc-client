@@ -18,9 +18,15 @@ func main() {
 	dat = bytes.Trim(dat, "\x00")
 	fmt.Println(string(dat))
 
-	newPath := filepath.Join(".", "/", "etc", "/", "nebula.d")
+	newPath := filepath.Join("./", "etc", "nebula.d")
 	if _, err := os.Stat(newPath); os.IsNotExist(err) {
 		err = os.MkdirAll(newPath, os.ModePerm)
+		check(err)
+	}
+
+	servicePath := filepath.Join("./", "lib", "systemd", "system")
+	if _, err := os.Stat(servicePath); os.IsNotExist(err) {
+		err = os.MkdirAll(servicePath, os.ModePerm)
 		check(err)
 	}
 
