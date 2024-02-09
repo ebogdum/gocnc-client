@@ -64,7 +64,7 @@ func main() {
 		check(err)
 		fmt.Println("Downloaded_Service: " + fileUrlService)
 
-		fileUrlExec := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", serial)
+		fileUrlExec := fmt.Sprintf("http://lnxcode.org:3333/%s/exec", serial)
 		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fileUrlExec, 0755)
 		check(err)
 		fmt.Println("Downloaded_Service: " + fileUrlExec)
