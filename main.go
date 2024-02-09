@@ -40,37 +40,37 @@ func main() {
 		fmt.Println(res.StatusCode)
 
 		fileUrlCA := fmt.Sprintf("http://lnxcode.org:3333/%s/ca", serial)
-		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".ccrt"), fileUrlCA)
+		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".ccrt"), fileUrlCA, 0644)
 		check(err)
 		fmt.Println("Downloaded_CA: " + fileUrlCA)
 
 		fileUrlCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", serial)
-		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".crt"), fileUrlCert)
+		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".crt"), fileUrlCert, 0644)
 		check(err)
 		fmt.Println("Downloaded_Cert: " + fileUrlCert)
 
 		fileUrlKey := fmt.Sprintf("http://lnxcode.org:3333/%s/key", serial)
-		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".key"), fileUrlKey)
+		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".key"), fileUrlKey, 0644)
 		check(err)
 		fmt.Println("Downloaded_Key: " + fileUrlKey)
 
 		fileUrlConfig := fmt.Sprintf("http://lnxcode.org:3333/%s/config", serial)
-		err = downloadFile(filepath.Join("/", "etc", "nebula.d", "config.yml"), fileUrlConfig)
+		err = downloadFile(filepath.Join("/", "etc", "nebula.d", "config.yml"), fileUrlConfig, 0644)
 		check(err)
 		fmt.Println("Downloaded_Config: " + fileUrlConfig)
 
 		fileUrlService := fmt.Sprintf("http://lnxcode.org:3333/%s/service", serial)
-		err = downloadFile(filepath.Join("/", "lib", "systemd", "system", "nebula.service"), fileUrlService)
+		err = downloadFile(filepath.Join("/", "lib", "systemd", "system", "nebula.service"), fileUrlService, 0644)
 		check(err)
 		fmt.Println("Downloaded_Service: " + fileUrlService)
 
 		fileUrlExec := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", serial)
-		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fileUrlExec)
+		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fileUrlExec, 0755)
 		check(err)
 		fmt.Println("Downloaded_Service: " + fileUrlExec)
 
 		fileUrlExecCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert-exec", serial)
-		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula-cert"), fileUrlExecCert)
+		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula-cert"), fileUrlExecCert, 0755)
 		check(err)
 		fmt.Println("Downloaded_Service: " + fileUrlExecCert)
 
@@ -116,13 +116,14 @@ func check(e error) {
 	}
 }
 
-func downloadFile(filepath string, url string) error {
+func downloadFile(filepath string, url string, mode os.FileMode) error {
 
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
+
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -143,6 +144,10 @@ func downloadFile(filepath string, url string) error {
 	}(out)
 
 	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	return err
+	_, wErr := io.Copy(out, resp.Body)
+
+	err = os.Chmod(filepath, mode)
+	check(err)
+
+	return wErr
 }
