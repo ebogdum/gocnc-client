@@ -32,17 +32,17 @@ func main() {
 	var serial []byte
 	var fileList Files
 
-	protocol := "http"
-	hostname := "lnxcode.org"
-	port := "3333"
-	baseURL := protocol + "://" + hostname + ":" + port
-	baseRequestURL := fmt.Sprintf("%s/%s", baseURL, serial)
-
 	//if _, err := os.Stat("/sys/firmware/devicetree/base/serial-number"); os.IsExist(err) {
 	serial, err = os.ReadFile("/sys/firmware/devicetree/base/serial-number")
 	check(err)
 	serial = bytes.Trim(serial, "\x00")
 	//}
+
+	protocol := "http"
+	hostname := "lnxcode.org"
+	port := "3333"
+	baseURL := protocol + "://" + hostname + ":" + port
+	baseRequestURL := fmt.Sprintf("%s/%s", baseURL, serial)
 
 	newPath := filepath.Join("/", "etc", "nebula.d")
 	if _, err = os.Stat(newPath); os.IsNotExist(err) {
