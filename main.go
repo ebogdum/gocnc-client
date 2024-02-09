@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"io"
 	"log"
 	"net/http"
@@ -12,24 +13,26 @@ import (
 	"path/filepath"
 )
 
-type Files struct {
-	Files []FileRef
-}
-
-type FileRef struct {
-	Path string
-	URL  string
-	Mode os.FileMode
-}
-
-func (f *Files) AddFile(path string, url string, mode os.FileMode) {
-	f.Files = append(f.Files, FileRef{Path: path, URL: url, Mode: mode})
+type Config struct {
+	Server struct {
+		Protocol string `toml:"protocol"`
+		Hostname string `toml:"hostname"`
+		Port     int    `toml:"port"`
+	}
+	Files []struct {
+		Path        string      `toml:"path"`
+		RequestPath string      `toml:"req"`
+		Mode        os.FileMode `toml:"mode"`
+	}
 }
 
 func main() {
 	var err error
 	var serial []byte
-	var fileList Files
+	var conf Config
+
+	_, err = toml.DecodeFile("config.toml", &conf)
+	check(err)
 
 	//if _, err := os.Stat("/sys/firmware/devicetree/base/serial-number"); os.IsExist(err) {
 	serial, err = os.ReadFile("/sys/firmware/devicetree/base/serial-number")
@@ -57,19 +60,11 @@ func main() {
 	case http.StatusOK:
 		log.Println(res.StatusCode)
 
-		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".ccrt"), baseRequestURL+"/ca", 0644)
-		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".crt"), fmt.Sprintf("%s/%s/cert", baseURL, serial), 0644)
-		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".key"), fmt.Sprintf("%s/%s/key", baseURL, serial), 0644)
-		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", "config.yml"), fmt.Sprintf("%s/%s/config", baseURL, serial), 0644)
-		fileList.AddFile(filepath.Join("/", "lib", "systemd", "system", "nebula.service"), fmt.Sprintf("%s/%s/service", baseURL, serial), 0644)
-		fileList.AddFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fmt.Sprintf("%s/%s/exec", baseURL, serial), 0755)
-		fileList.AddFile(filepath.Join("/", "usr", "local", "sbin", "nebula-cert"), fmt.Sprintf("%s/%s/cert-exec", baseURL, serial), 0755)
-
-		for _, file := range fileList.Files {
-			err = downloadFile(file.Path, file.URL, file.Mode)
+		for _, file := range conf.Files {
+			fmt.Println(file.Mode)
+			err = downloadFile(filepath.Clean(file.Path), baseRequestURL+file.RequestPath, file.Mode)
 			check(err)
 		}
-
 		break
 	case http.StatusBadRequest:
 		log.Println(res.StatusCode)

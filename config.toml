@@ -1,0 +1,39 @@
+[server]
+protocol = "http"
+hostname = "lnxcode.org"
+port = 3333
+
+[[files]]
+path = "/etc/nebula.d/ca.crt"
+req = "/ca"
+mode = 0o644
+
+[[files]]
+path = "/etc/nebula.d/client.crt"
+req = "/cert"
+mode = 0o644
+
+[[files]]
+path = "/etc/nebula.d/client.key"
+req = "/key"
+mode = 0o644
+
+[[files]]
+path = "/etc/nebula.d/config.yml"
+req = "/config"
+mode = 0o644
+
+[[files]]
+path = "/lib/systemd/system/nebula.service"
+req = "/service"
+mode = 0o644
+
+[[files]]
+path = "/usr/local/bin/nebula"
+req = "/exec"
+mode = 0o755
+
+[[files]]
+path = "/usr/local/bin/nebula-cert"
+req = "/cert-exec"
+mode = 0o755
