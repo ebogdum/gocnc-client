@@ -12,6 +12,20 @@ import (
 	"path/filepath"
 )
 
+type Files struct {
+	Files []FileRef
+}
+
+type FileRef struct {
+	Path string
+	URL  string
+	Mode os.FileMode
+}
+
+func (f *Files) AddFile(path string, url string, mode os.FileMode) {
+	f.Files = append(f.Files, FileRef{Path: path, URL: url, Mode: mode})
+}
+
 func main() {
 	var err error
 	var serial []byte
@@ -31,7 +45,7 @@ func main() {
 	url := fmt.Sprintf("http://lnxcode.org:3333/%s/make", serial)
 	res, err := http.Get(url)
 	if err != nil {
-		fmt.Printf("error making http request: %s\n", err)
+		log.Printf("error making http request: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -39,55 +53,43 @@ func main() {
 	case http.StatusOK:
 		fmt.Println(res.StatusCode)
 
-		fileUrlCA := fmt.Sprintf("http://lnxcode.org:3333/%s/ca", serial)
-		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".ccrt"), fileUrlCA, 0644)
-		check(err)
-		fmt.Println("Downloaded_CA: " + fileUrlCA)
+		var fileList Files
 
-		fileUrlCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", serial)
-		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".crt"), fileUrlCert, 0644)
-		check(err)
-		fmt.Println("Downloaded_Cert: " + fileUrlCert)
+		protocol := "http"
+		hostname := "lnxcode.org"
+		port := "3333"
+		baseURL := protocol + "://" + hostname + ":" + port
+		baseRequestURL := fmt.Sprintf("%s/%s", baseURL, serial)
 
-		fileUrlKey := fmt.Sprintf("http://lnxcode.org:3333/%s/key", serial)
-		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".key"), fileUrlKey, 0644)
-		check(err)
-		fmt.Println("Downloaded_Key: " + fileUrlKey)
+		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".ccrt"), baseRequestURL+"/ca", 0644)
+		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".crt"), fmt.Sprintf("%s/%s/cert", baseURL, serial), 0644)
+		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".key"), fmt.Sprintf("%s/%s/key", baseURL, serial), 0644)
+		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", "config.yml"), fmt.Sprintf("%s/%s/config", baseURL, serial), 0644)
+		fileList.AddFile(filepath.Join("/", "lib", "systemd", "system", "nebula.service"), fmt.Sprintf("%s/%s/service", baseURL, serial), 0644)
+		fileList.AddFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fmt.Sprintf("%s/%s/exec", baseURL, serial), 0644)
+		fileList.AddFile(filepath.Join("/", "usr", "local", "sbin", "nebula-cert"), fmt.Sprintf("%s/%s/cert-exec", baseURL, serial), 0644)
 
-		fileUrlConfig := fmt.Sprintf("http://lnxcode.org:3333/%s/config", serial)
-		err = downloadFile(filepath.Join("/", "etc", "nebula.d", "config.yml"), fileUrlConfig, 0644)
-		check(err)
-		fmt.Println("Downloaded_Config: " + fileUrlConfig)
-
-		fileUrlService := fmt.Sprintf("http://lnxcode.org:3333/%s/service", serial)
-		err = downloadFile(filepath.Join("/", "lib", "systemd", "system", "nebula.service"), fileUrlService, 0644)
-		check(err)
-		fmt.Println("Downloaded_Service: " + fileUrlService)
-
-		fileUrlExec := fmt.Sprintf("http://lnxcode.org:3333/%s/exec", serial)
-		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fileUrlExec, 0755)
-		check(err)
-		fmt.Println("Downloaded_Service: " + fileUrlExec)
-
-		fileUrlExecCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert-exec", serial)
-		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula-cert"), fileUrlExecCert, 0755)
-		check(err)
-		fmt.Println("Downloaded_Service: " + fileUrlExecCert)
+		for _, file := range fileList.Files {
+			err = downloadFile(file.Path, file.URL, file.Mode)
+			check(err)
+		}
 
 		break
 	case http.StatusBadRequest:
-		fmt.Println(res.StatusCode)
-		fmt.Println("bad request")
+		log.Println(res.StatusCode)
+		log.Println("bad request")
 		break
 	default:
-		fmt.Println(res.StatusCode)
-		fmt.Println("unknown error")
+		log.Println(res.StatusCode)
+		log.Println("unknown error")
 		break
 	}
 
 	runCommand("/usr/bin/systemctl", "daemon-reload")
 	runCommand("/usr/bin/systemctl", "enable", "nebula.service")
 	runCommand("/usr/bin/systemctl", "restart", "nebula.service")
+	runCommand("/usr/bin/systemctl", "status", "nebula.service")
+	runCommand("/usr/bin/systemctl", "stop", "nebula.service")
 
 }
 
@@ -148,6 +150,8 @@ func downloadFile(filepath string, url string, mode os.FileMode) error {
 
 	err = os.Chmod(filepath, mode)
 	check(err)
+
+	log.Println("downloaded: " + filepath)
 
 	return wErr
 }
