@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 type Files struct {
@@ -29,6 +30,13 @@ func (f *Files) AddFile(path string, url string, mode os.FileMode) {
 func main() {
 	var err error
 	var serial []byte
+	var fileList Files
+
+	protocol := "http"
+	hostname := "lnxcode.org"
+	port := "3333"
+	baseURL := protocol + "://" + hostname + ":" + port
+	baseRequestURL := fmt.Sprintf("%s/%s", baseURL, serial)
 
 	//if _, err := os.Stat("/sys/firmware/devicetree/base/serial-number"); os.IsExist(err) {
 	serial, err = os.ReadFile("/sys/firmware/devicetree/base/serial-number")
@@ -42,24 +50,13 @@ func main() {
 		check(err)
 	}
 
-	url := fmt.Sprintf("http://lnxcode.org:3333/%s/make", serial)
+	url := baseRequestURL + "/make"
 	res, err := http.Get(url)
-	if err != nil {
-		log.Printf("error making http request: %s\n", err)
-		os.Exit(1)
-	}
+	check(err)
 
 	switch res.StatusCode {
 	case http.StatusOK:
-		fmt.Println(res.StatusCode)
-
-		var fileList Files
-
-		protocol := "http"
-		hostname := "lnxcode.org"
-		port := "3333"
-		baseURL := protocol + "://" + hostname + ":" + port
-		baseRequestURL := fmt.Sprintf("%s/%s", baseURL, serial)
+		log.Println(res.StatusCode)
 
 		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".ccrt"), baseRequestURL+"/ca", 0644)
 		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".crt"), fmt.Sprintf("%s/%s/cert", baseURL, serial), 0644)
@@ -88,6 +85,7 @@ func main() {
 	runCommand("/usr/bin/systemctl", "daemon-reload")
 	runCommand("/usr/bin/systemctl", "enable", "nebula.service")
 	runCommand("/usr/bin/systemctl", "restart", "nebula.service")
+	time.Sleep(3 * time.Second)
 	runCommand("/usr/bin/systemctl", "status", "nebula.service")
 	runCommand("/usr/bin/systemctl", "stop", "nebula.service")
 
@@ -95,7 +93,7 @@ func main() {
 
 func runCommand(command string, args ...string) {
 	cmd := exec.Command(command, args...)
-	fmt.Println(cmd)
+	log.Printf("running: %s", cmd)
 	if err := cmd.Start(); err != nil {
 		log.Fatalf("cmd.Start: %v", err)
 	}
@@ -108,12 +106,16 @@ func runCommand(command string, args ...string) {
 	}
 
 	stdout, _ := cmd.CombinedOutput()
-	fmt.Println(stdout)
+	log.Printf("output: %s", stdout)
 }
 
-func check(e error) {
+func check(e error, msg ...string) {
 	if e != nil {
-		fmt.Println("Error: " + e.Error())
+		if len(msg) > 0 {
+			log.Println("Error: " + msg[0] + " -- " + e.Error())
+		} else {
+			log.Println("Error: " + e.Error())
+		}
 		panic(e)
 	}
 }
