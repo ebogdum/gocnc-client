@@ -20,6 +20,7 @@ func main() {
 		serial, err = os.ReadFile("/sys/firmware/devicetree/base/serial-number")
 		check(err)
 		serial = bytes.Trim(serial, "\x00")
+		fmt.Println(string(serial))
 	}
 
 	fmt.Println(string(serial))
