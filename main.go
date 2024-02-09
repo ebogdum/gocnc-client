@@ -22,6 +22,8 @@ func main() {
 		serial = bytes.Trim(serial, "\x00")
 	}
 
+	fmt.Println(string(serial))
+
 	newPath := filepath.Join("/", "etc", "nebula.d")
 	if _, err = os.Stat(newPath); os.IsNotExist(err) {
 		err = os.MkdirAll(newPath, os.ModePerm)
