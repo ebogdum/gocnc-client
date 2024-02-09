@@ -64,6 +64,16 @@ func main() {
 		check(err)
 		fmt.Println("Downloaded_Service: " + fileUrlService)
 
+		fileUrlExec := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", serial)
+		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fileUrlExec)
+		check(err)
+		fmt.Println("Downloaded_Service: " + fileUrlExec)
+
+		fileUrlExecCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert-exec", serial)
+		err = downloadFile(filepath.Join("/", "usr", "local", "sbin", "nebula-cert"), fileUrlExecCert)
+		check(err)
+		fmt.Println("Downloaded_Service: " + fileUrlExecCert)
+
 		break
 	case http.StatusBadRequest:
 		fmt.Println(res.StatusCode)
