@@ -2,35 +2,33 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
 func main() {
-	err := error(nil)
+	var err error
+	var serial []byte
 
-	fmt.Println("Hello, World!")
+	if _, err := os.Stat("/sys_host/firmware/devicetree/base/serial-number"); os.IsNotExist(err) {
+		serial, err = os.ReadFile("/sys_host/firmware/devicetree/base/serial-number")
+		check(err)
+		serial = bytes.Trim(serial, "\x00")
+	}
 
-	dat, _ := os.ReadFile("/sys_host/firmware/devicetree/base/serial-number")
-	dat = bytes.Trim(dat, "\x00")
-	fmt.Println(string(dat))
-
-	newPath := filepath.Join("./", "etc", "nebula.d")
-	if _, err := os.Stat(newPath); os.IsNotExist(err) {
+	newPath := filepath.Join("/", "etc", "nebula.d")
+	if _, err = os.Stat(newPath); os.IsNotExist(err) {
 		err = os.MkdirAll(newPath, os.ModePerm)
 		check(err)
 	}
 
-	servicePath := filepath.Join("./", "lib", "systemd", "system")
-	if _, err := os.Stat(servicePath); os.IsNotExist(err) {
-		err = os.MkdirAll(servicePath, os.ModePerm)
-		check(err)
-	}
-
-	url := fmt.Sprintf("http://lnxcode.org:3333/%s/make", dat)
+	url := fmt.Sprintf("http://lnxcode.org:3333/%s/make", serial)
 	res, err := http.Get(url)
 	if err != nil {
 		fmt.Printf("error making http request: %s\n", err)
@@ -41,28 +39,28 @@ func main() {
 	case http.StatusOK:
 		fmt.Println(res.StatusCode)
 
-		fileUrlCA := fmt.Sprintf("http://lnxcode.org:3333/%s/ca", dat)
-		err = downloadFile(filepath.Join("./", "etc", "nebula.d", string(dat)+".ccrt"), fileUrlCA)
+		fileUrlCA := fmt.Sprintf("http://lnxcode.org:3333/%s/ca", serial)
+		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".ccrt"), fileUrlCA)
 		check(err)
 		fmt.Println("Downloaded_CA: " + fileUrlCA)
 
-		fileUrlCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", dat)
-		err = downloadFile(filepath.Join("./", "etc", "nebula.d", string(dat)+".crt"), fileUrlCert)
+		fileUrlCert := fmt.Sprintf("http://lnxcode.org:3333/%s/cert", serial)
+		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".crt"), fileUrlCert)
 		check(err)
 		fmt.Println("Downloaded_Cert: " + fileUrlCert)
 
-		fileUrlKey := fmt.Sprintf("http://lnxcode.org:3333/%s/key", dat)
-		err = downloadFile(filepath.Join("./", "etc", "nebula.d", string(dat)+".key"), fileUrlKey)
+		fileUrlKey := fmt.Sprintf("http://lnxcode.org:3333/%s/key", serial)
+		err = downloadFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".key"), fileUrlKey)
 		check(err)
 		fmt.Println("Downloaded_Key: " + fileUrlKey)
 
-		fileUrlConfig := fmt.Sprintf("http://lnxcode.org:3333/%s/config", dat)
-		err = downloadFile(filepath.Join("./", "etc", "nebula.d", "config.yml"), fileUrlConfig)
+		fileUrlConfig := fmt.Sprintf("http://lnxcode.org:3333/%s/config", serial)
+		err = downloadFile(filepath.Join("/", "etc", "nebula.d", "config.yml"), fileUrlConfig)
 		check(err)
 		fmt.Println("Downloaded_Config: " + fileUrlConfig)
 
-		fileUrlService := fmt.Sprintf("http://lnxcode.org:3333/%s/service", dat)
-		err = downloadFile(filepath.Join("./", "lib", "systemd", "system", "nebula.service"), fileUrlService)
+		fileUrlService := fmt.Sprintf("http://lnxcode.org:3333/%s/service", serial)
+		err = downloadFile(filepath.Join("/", "lib", "systemd", "system", "nebula.service"), fileUrlService)
 		check(err)
 		fmt.Println("Downloaded_Service: " + fileUrlService)
 
@@ -77,6 +75,28 @@ func main() {
 		break
 	}
 
+	runCommand("/usr/bin/systemctl", "daemon-reload")
+	runCommand("/usr/bin/systemctl", "enable", "nebula.service")
+	runCommand("/usr/bin/systemctl", "restart", "nebula.service")
+
+}
+
+func runCommand(command string, args ...string) {
+	cmd := exec.Command(command, args...)
+	fmt.Println(cmd)
+	if err := cmd.Start(); err != nil {
+		log.Fatalf("cmd.Start: %v", err)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			log.Printf("Exit Status: %d", exitErr.ExitCode())
+		}
+	}
+
+	stdout, _ := cmd.CombinedOutput()
+	fmt.Println(stdout)
 }
 
 func check(e error) {
@@ -93,14 +113,24 @@ func downloadFile(filepath string, url string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
 
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func(out *os.File) {
+		err := out.Close()
+		if err != nil {
+
+		}
+	}(out)
 
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
