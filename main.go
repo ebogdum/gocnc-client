@@ -16,8 +16,8 @@ func main() {
 	var err error
 	var serial []byte
 
-	if _, err := os.Stat("/sys_host/firmware/devicetree/base/serial-number"); os.IsNotExist(err) {
-		serial, err = os.ReadFile("/sys_host/firmware/devicetree/base/serial-number")
+	if _, err := os.Stat("/sys/firmware/devicetree/base/serial-number"); os.IsNotExist(err) {
+		serial, err = os.ReadFile("/sys/firmware/devicetree/base/serial-number")
 		check(err)
 		serial = bytes.Trim(serial, "\x00")
 	}
