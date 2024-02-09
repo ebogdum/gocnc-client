@@ -63,8 +63,8 @@ func main() {
 		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", string(serial)+".key"), fmt.Sprintf("%s/%s/key", baseURL, serial), 0644)
 		fileList.AddFile(filepath.Join("/", "etc", "nebula.d", "config.yml"), fmt.Sprintf("%s/%s/config", baseURL, serial), 0644)
 		fileList.AddFile(filepath.Join("/", "lib", "systemd", "system", "nebula.service"), fmt.Sprintf("%s/%s/service", baseURL, serial), 0644)
-		fileList.AddFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fmt.Sprintf("%s/%s/exec", baseURL, serial), 0644)
-		fileList.AddFile(filepath.Join("/", "usr", "local", "sbin", "nebula-cert"), fmt.Sprintf("%s/%s/cert-exec", baseURL, serial), 0644)
+		fileList.AddFile(filepath.Join("/", "usr", "local", "sbin", "nebula"), fmt.Sprintf("%s/%s/exec", baseURL, serial), 0755)
+		fileList.AddFile(filepath.Join("/", "usr", "local", "sbin", "nebula-cert"), fmt.Sprintf("%s/%s/cert-exec", baseURL, serial), 0755)
 
 		for _, file := range fileList.Files {
 			err = downloadFile(file.Path, file.URL, file.Mode)
