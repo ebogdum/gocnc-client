@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 )
 
 type Files struct {
@@ -85,9 +84,6 @@ func main() {
 	runCommand("/usr/bin/systemctl", "daemon-reload")
 	runCommand("/usr/bin/systemctl", "enable", "nebula.service")
 	runCommand("/usr/bin/systemctl", "restart", "nebula.service")
-	time.Sleep(3 * time.Second)
-	runCommand("/usr/bin/systemctl", "status", "nebula.service")
-	runCommand("/usr/bin/systemctl", "stop", "nebula.service")
 
 }
 
