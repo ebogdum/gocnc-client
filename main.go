@@ -16,15 +16,12 @@ func main() {
 	var err error
 	var serial []byte
 
-	if _, err := os.Stat("/sys/firmware/devicetree/base/serial-number"); os.IsNotExist(err) {
+	if _, err := os.Stat("/sys/firmware/devicetree/base/serial-number"); os.IsExist(err) {
 		serial, err = os.ReadFile("/sys/firmware/devicetree/base/serial-number")
 		check(err)
 		serial = bytes.Trim(serial, "\x00")
-		fmt.Println(string(serial))
 	}
-
-	fmt.Println(string(serial))
-
+	
 	newPath := filepath.Join("/", "etc", "nebula.d")
 	if _, err = os.Stat(newPath); os.IsNotExist(err) {
 		err = os.MkdirAll(newPath, os.ModePerm)
