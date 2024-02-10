@@ -4,7 +4,7 @@ hostname = "lnxcode.org"
 port = 3333
 
 [[files]]
-path = "/etc/nebula.d/ca.crt"
+path = "/etc/nebula.d/server.crt"
 req = "/ca"
 mode = 0o644
 

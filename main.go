@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 )
 
 type Config struct {
@@ -24,12 +25,16 @@ type Config struct {
 		RequestPath string      `toml:"req"`
 		Mode        os.FileMode `toml:"mode"`
 	}
+	Template struct {
+		Enabled bool `toml:"enabled"`
+	}
 }
+
+var conf Config
 
 func main() {
 	var err error
 	var serial []byte
-	var conf Config
 
 	_, err = toml.DecodeFile("config.toml", &conf)
 	check(err)
@@ -40,9 +45,9 @@ func main() {
 	serial = bytes.Trim(serial, "\x00")
 	//}
 
-	protocol := "http"
-	hostname := "lnxcode.org"
-	port := "3333"
+	protocol := conf.Server.Protocol
+	hostname := conf.Server.Hostname
+	port := strconv.Itoa(conf.Server.Port)
 	baseURL := protocol + "://" + hostname + ":" + port
 	baseRequestURL := fmt.Sprintf("%s/%s", baseURL, serial)
 
@@ -61,7 +66,6 @@ func main() {
 		log.Println(res.StatusCode)
 
 		for _, file := range conf.Files {
-			fmt.Println(file.Mode)
 			err = downloadFile(filepath.Clean(file.Path), baseRequestURL+file.RequestPath, file.Mode)
 			check(err)
 		}
