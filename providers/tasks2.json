@@ -1,0 +1,52 @@
+{
+  "tasks": [
+    {
+      "module": "files",
+      "task": {
+        "version": 1,
+        "type": "file //type of file: absent, directory, file, hard, symbolic, touch, truncate, download, read, upload",
+        "src": "path to file or URL //this will ignore content -- if both are present, source takes precedence",
+        "content": "content of file //this will ignore source -- if both are present, source takes precedence",
+        "dest": "path to file",
+        "use": "copy or move",
+        "mode": "mode of file",
+        "owner": "owner of file",
+        "group": "group of file",
+        "modification_time": "modification time of file",
+        "access_time": "access time of file"
+      }
+    },
+    {
+      "module": "files",
+      "task": {
+        "version": 1,
+        "type": "touch //type of file: absent, directory, file, hard, symbolic, touch, truncate, download, read, upload",
+        "dest": "path to file",
+        "mode": "mode of file",
+        "owner": "owner of file",
+        "group": "group of file",
+        "modification_time": "modification time of file",
+        "access_time": "access time of file"
+      }
+    },
+    {
+      "module": "templates",
+      "task": {
+        "version": 1,
+        "src": "path to file or URL //this will ignore content -- if both are present, source takes precedence",
+        "content": "content of file //this will ignore source -- if both are present, source takes precedence",
+        "var_file": "path to file or URL",
+        "variables": {
+          "variable1": "value1",
+          "variable2": "value2"
+        },
+        "dest": "path to file OR URL",
+        "mode": "mode of file",
+        "owner": "owner of file",
+        "group": "group of file",
+        "modification_time": "modification time of file",
+        "access_time": "access time of file"
+      }
+    }
+  ]
+}
